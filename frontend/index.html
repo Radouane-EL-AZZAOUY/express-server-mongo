@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Top 10</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-mark">♫</div>
+          <div>
+            <h1 class="brand-title">Music Top 10</h1>
+            <p class="brand-subtitle">Music charts</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="app-main">
+        <section class="card card-form">
+          <h2 class="card-title">Contact</h2>
+          <p class="card-description">
+            Save your contact information.
+          </p>
+          <form id="contact-form" class="form">
+            <div class="field">
+              <label for="name">Name</label>
+              <input id="name" type="text" name="name" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <p id="submit-msg" class="submit-message" aria-live="polite"></p>
+            <button id="btn-submit" type="submit" class="btn btn-primary">
+              Save
+            </button>
+          </form>
+        </section>
+
+        <section class="card card-list">
+          <div class="card-header">
+            <h2 class="card-title">Top 10</h2>
+            <p class="card-description">
+              View the current chart.
+            </p>
+          </div>
+          <div class="chart-actions">
+            <button id="btn-top10-api" type="button" class="btn btn-ghost">
+              Load from Apple API
+            </button>
+            <button id="btn-top10-db" type="button" class="btn btn-ghost">
+              Load from MongoDB
+            </button>
+          </div>
+          <div id="top10-state" class="top10-state"></div>
+          <ul id="top10" class="top10-list" aria-live="polite"></ul>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
+

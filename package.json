@@ -1,0 +1,14 @@
+{
+  "name": "custom-server-express",
+  "version": "1.0.0",
+  "description": "Express server that fetches top 10 songs and stores them in MongoDB.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.8.0",
+    "xml2js": "^0.6.2"
+  }
+}
