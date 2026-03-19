@@ -1,6 +1,28 @@
 const { parseStringPromise } = require('xml2js');
 const { Song } = require('../models/songModel');
 
+function extractTrackId(entry) {
+  // Try im:id first
+  const raw = entry['im:id'];
+  if (raw) {
+    const val = typeof raw === 'object' ? raw._ : raw;
+    if (val && /^\d+$/.test(String(val).trim())) return String(val).trim();
+  }
+
+  // Fall back to extracting from the entry id URL: ...?i=TRACKID
+  const idField = entry.id;
+  const idUrl = idField && (typeof idField === 'object' ? idField._ : idField);
+  if (idUrl && typeof idUrl === 'string') {
+    const match = idUrl.match(/[?&]i=(\d+)/);
+    if (match) return match[1];
+    // Some URLs end with the numeric id: .../1234567890
+    const pathMatch = idUrl.match(/\/(\d{8,})$/);
+    if (pathMatch) return pathMatch[1];
+  }
+
+  return null;
+}
+
 async function fetchTopSongsFromApple(limit = 10) {
   const base =
     'ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=' +
@@ -25,10 +47,43 @@ async function fetchTopSongsFromApple(limit = 10) {
       ? [parsed.feed.entry]
       : [];
 
+  const trackIds = entries.map(extractTrackId).filter(Boolean);
+  console.log('[songService] extracted trackIds:', trackIds);
+
+  let previewMap = {};
+  if (trackIds.length > 0) {
+    try {
+      const lookupUrl =
+        'https://itunes.apple.com/lookup?id=' +
+        trackIds.join(',') +
+        '&entity=song&country=us';
+      const lookupRes = await fetch(lookupUrl);
+      if (lookupRes.ok) {
+        const lookupData = await lookupRes.json();
+        console.log('[songService] iTunes lookup results count:', lookupData.resultCount);
+        (lookupData.results || []).forEach((r) => {
+          if (r.previewUrl) {
+            // index by trackId or collectionId
+            const id = r.trackId || r.collectionId;
+            if (id) previewMap[String(id)] = r.previewUrl;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[songService] preview lookup failed:', e.message);
+    }
+  }
+
+  console.log('[songService] previewMap keys:', Object.keys(previewMap));
+
   return entries.map((entry) => {
+    // Prefer im:name (song title only); fall back to the combined entry.title label
+    const rawName = entry['im:name'];
+    const rawTitle = entry.title;
     const title =
-      (entry.title && entry.title._) ||
-      (typeof entry.title === 'string' ? entry.title : 'Unknown');
+      (rawName && (typeof rawName === 'object' ? rawName._ : rawName)) ||
+      (rawTitle && (typeof rawTitle === 'object' ? rawTitle._ : rawTitle)) ||
+      'Unknown';
 
     let image = '';
     const images = entry['im:image'];
@@ -38,16 +93,25 @@ async function fetchTopSongsFromApple(limit = 10) {
       image = images._;
     }
 
+    // im:artist is the primary artist field in Apple RSS
     let author = '';
-    if (entry.author) {
-      if (entry.author.name && entry.author.name._) {
-        author = entry.author.name._;
+    const rawArtist = entry['im:artist'];
+    if (rawArtist) {
+      author = typeof rawArtist === 'object' ? (rawArtist._ || '') : rawArtist;
+    }
+    if (!author && entry.author) {
+      if (entry.author.name) {
+        const n = entry.author.name;
+        author = typeof n === 'object' ? (n._ || '') : n;
       } else if (typeof entry.author === 'string') {
         author = entry.author;
       }
     }
 
-    return { title: title || 'Unknown', image: image || '', author: author || '' };
+    const trackId = extractTrackId(entry);
+    const previewUrl = trackId ? (previewMap[String(trackId)] || '') : '';
+
+    return { title: title || 'Unknown', image: image || '', author: author || '', previewUrl };
   });
 }
 

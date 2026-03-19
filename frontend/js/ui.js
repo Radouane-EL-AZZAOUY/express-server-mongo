@@ -1,41 +1,75 @@
-export function getFormData() {
-  const form = document.getElementById("contact-form");
-  const nameInput = form?.elements.namedItem("name");
-  const emailInput = form?.elements.namedItem("email");
+let activeAudio = null;
+let activePlayBtn = null;
+let activeProgressFill = null;
+let activeProgressInterval = null;
+let activeLi = null;
 
-  const name = nameInput && "value" in nameInput ? nameInput.value : "";
-  const email = emailInput && "value" in emailInput ? emailInput.value : "";
-
-  return { name, email };
-}
-
-export function showSubmitMessage(message) {
-  const msgEl = document.getElementById("submit-msg");
-  if (msgEl) {
-    msgEl.textContent = message;
+function stopActive() {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio = null;
+  }
+  if (activePlayBtn) {
+    activePlayBtn.textContent = "▶";
+    activePlayBtn.classList.remove("playing");
+    activePlayBtn = null;
+  }
+  if (activeProgressFill) {
+    activeProgressFill.style.width = "0%";
+    activeProgressFill = null;
+  }
+  if (activeProgressInterval) {
+    clearInterval(activeProgressInterval);
+    activeProgressInterval = null;
+  }
+  if (activeLi) {
+    activeLi.classList.remove("is-playing");
+    activeLi = null;
   }
 }
 
-export function downloadJson(data) {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "data.json";
-  link.click();
-  URL.revokeObjectURL(url);
+function playSong(song, li, playBtn, progressFill) {
+  // If this song is already playing, pause it
+  if (activeAudio && activeLi === li) {
+    stopActive();
+    return;
+  }
+
+  stopActive();
+
+  const audio = new Audio(song.previewUrl);
+  activeAudio = audio;
+  activePlayBtn = playBtn;
+  activeProgressFill = progressFill;
+  activeLi = li;
+
+  playBtn.textContent = "⏸";
+  playBtn.classList.add("playing");
+  li.classList.add("is-playing");
+
+  const DURATION = 30;
+  let elapsed = 0;
+  activeProgressInterval = setInterval(() => {
+    elapsed += 0.25;
+    const pct = Math.min((elapsed / DURATION) * 100, 100);
+    progressFill.style.width = pct + "%";
+    if (elapsed >= DURATION) stopActive();
+  }, 250);
+
+  audio.addEventListener("ended", stopActive);
+
+  audio.play().catch((err) => {
+    console.error("[player] play() failed:", err);
+    stopActive();
+  });
 }
 
 export function showTop10Loading() {
   const listEl = document.getElementById("top10");
   const stateEl = document.getElementById("top10-state");
-  if (listEl) {
-    listEl.innerHTML = "";
-  }
-  if (stateEl) {
-    stateEl.textContent = "Loading…";
-  }
+  stopActive();
+  if (listEl) listEl.innerHTML = "";
+  if (stateEl) stateEl.textContent = "Loading…";
 }
 
 export function renderTop10(songs) {
@@ -43,6 +77,7 @@ export function renderTop10(songs) {
   const stateEl = document.getElementById("top10-state");
   if (!listEl) return;
 
+  stopActive();
   listEl.innerHTML = "";
 
   if (!songs || songs.length === 0) {
@@ -59,15 +94,32 @@ export function renderTop10(songs) {
   songs.forEach((song, index) => {
     const li = document.createElement("li");
 
+    if (song.previewUrl) {
+      li.classList.add("has-preview");
+      li.title = "Click to play 30s preview";
+    }
+
+    // Album art with rank badge
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "top10-img-wrap";
+
     if (song.image) {
       const img = document.createElement("img");
       img.src = song.image;
       img.alt = song.title;
-      img.width = 55;
-      img.height = 55;
-      li.appendChild(img);
+      img.width = 44;
+      img.height = 44;
+      imgWrap.appendChild(img);
     }
 
+    const rankBadge = document.createElement("span");
+    rankBadge.className = "top10-rank-badge";
+    rankBadge.textContent = `${index + 1}`;
+    imgWrap.appendChild(rankBadge);
+
+    li.appendChild(imgWrap);
+
+    // Track info + progress bar
     const textWrapper = document.createElement("div");
     textWrapper.className = "top10-track";
 
@@ -81,12 +133,40 @@ export function renderTop10(songs) {
 
     textWrapper.appendChild(titleEl);
     textWrapper.appendChild(authorEl);
+
+    const progressWrap = document.createElement("div");
+    progressWrap.className = "play-progress";
+    const progressFill = document.createElement("div");
+    progressFill.className = "play-progress-fill";
+    progressWrap.appendChild(progressFill);
+    textWrapper.appendChild(progressWrap);
+
     li.appendChild(textWrapper);
 
-    const indexEl = document.createElement("div");
-    indexEl.className = "top10-index";
-    indexEl.textContent = `#${index + 1}`;
-    li.appendChild(indexEl);
+    // Play button (right column)
+    const playBtn = document.createElement("button");
+    playBtn.className = "btn-play";
+    playBtn.setAttribute("aria-label", `Play preview of ${song.title}`);
+    playBtn.textContent = "▶";
+
+    if (song.previewUrl) {
+      // Click anywhere on the row
+      li.addEventListener("click", (e) => {
+        if (e.target === playBtn) return; // handled below
+        playSong(song, li, playBtn, progressFill);
+      });
+
+      // Click the button directly
+      playBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        playSong(song, li, playBtn, progressFill);
+      });
+    } else {
+      playBtn.disabled = true;
+      playBtn.classList.add("no-preview");
+    }
+
+    li.appendChild(playBtn);
 
     listEl.appendChild(li);
   });
@@ -95,11 +175,7 @@ export function renderTop10(songs) {
 export function showTop10Error(message) {
   const listEl = document.getElementById("top10");
   const stateEl = document.getElementById("top10-state");
-  if (listEl) {
-    listEl.innerHTML = "";
-  }
-  if (stateEl) {
-    stateEl.textContent = `Error: ${message}`;
-  }
+  stopActive();
+  if (listEl) listEl.innerHTML = "";
+  if (stateEl) stateEl.textContent = `Error: ${message}`;
 }
-

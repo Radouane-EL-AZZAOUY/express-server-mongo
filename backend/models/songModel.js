@@ -5,6 +5,7 @@ const songSchema = new mongoose.Schema(
     title: String,
     image: String,
     author: String,
+    previewUrl: String,
   },
   { timestamps: true }
 );

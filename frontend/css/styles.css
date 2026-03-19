@@ -71,7 +71,7 @@ body {
 
 .app-main {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.75rem;
   padding: 1.75rem 2rem 2rem 2rem;
 }
@@ -83,7 +83,6 @@ body {
   }
 
   .app-main {
-    grid-template-columns: minmax(0, 1fr);
     padding: 1.5rem 1.25rem 1.75rem 1.25rem;
   }
 }
@@ -144,61 +143,10 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.field label {
-  font-size: 0.9rem;
-  color: #e5e7eb;
-}
-
-.field input {
-  width: 100%;
-  padding: 0.6rem 0.65rem;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: rgba(15, 23, 42, 0.95);
-  color: #e5e7eb;
-  font-size: 0.92rem;
-  outline: none;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.field input::placeholder {
-  color: #6b7280;
-}
-
-.field input:focus-visible {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7);
-  background: rgba(15, 23, 42, 0.98);
-}
-
-.form .btn {
-  margin-top: 0.25rem;
-}
-
-.actions,
 .chart-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.form .actions {
-  margin-top: 0.4rem;
 }
 
 .btn {
@@ -256,13 +204,6 @@ body {
     0 0 0 1px rgba(15, 23, 42, 0.8);
 }
 
-.submit-message {
-  margin: 0.25rem 0 0.25rem 0;
-  font-size: 0.86rem;
-  color: #22c55e;
-  min-height: 1.2rem;
-}
-
 .top10-state {
   margin: 0.45rem 0 0.4rem;
   font-size: 0.85rem;
@@ -297,11 +238,34 @@ body {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.45rem 0.4rem;
+  padding: 0.5rem 0.6rem;
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(148, 163, 184, 0.5);
   backdrop-filter: blur(12px);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.top10-list li.has-preview {
+  cursor: pointer;
+}
+
+.top10-list li.has-preview:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.top10-list li.is-playing {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+.top10-img-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
 }
 
 .top10-list img {
@@ -312,25 +276,111 @@ body {
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.9);
 }
 
+.top10-rank-badge {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.8);
+}
+
 .top10-track {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .top10-title {
   font-size: 0.92rem;
   color: #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top10-author {
   font-size: 0.78rem;
   color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top10-index {
   font-size: 0.88rem;
   color: #9ca3af;
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.play-progress {
+  height: 2px;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 999px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.play-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  border-radius: 999px;
+  transition: width 0.25s linear;
+}
+
+.btn-play {
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.08s ease-out;
+}
+
+.btn-play:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.7);
+  transform: scale(1.08);
+}
+
+.btn-play.playing {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.55);
+  color: #f97316;
+}
+
+.btn-play.playing:hover {
+  background: rgba(249, 115, 22, 0.25);
+  border-color: rgba(249, 115, 22, 0.8);
+}
+
+.btn-play.no-preview {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
 }
 
