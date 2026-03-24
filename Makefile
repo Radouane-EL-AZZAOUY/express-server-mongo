@@ -22,7 +22,7 @@ build:
 network:
 	-docker network create $(NETWORK)
 
-run: build network
+run: clean build network
 	@echo "Creating volumes if needed..."
 	-docker volume create mongo-data
 	-docker volume create form-data

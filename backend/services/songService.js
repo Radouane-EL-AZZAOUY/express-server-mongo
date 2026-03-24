@@ -2,20 +2,17 @@ const { parseStringPromise } = require('xml2js');
 const { Song } = require('../models/songModel');
 
 function extractTrackId(entry) {
-  // Try im:id first
   const raw = entry['im:id'];
   if (raw) {
     const val = typeof raw === 'object' ? raw._ : raw;
     if (val && /^\d+$/.test(String(val).trim())) return String(val).trim();
   }
 
-  // Fall back to extracting from the entry id URL: ...?i=TRACKID
   const idField = entry.id;
   const idUrl = idField && (typeof idField === 'object' ? idField._ : idField);
   if (idUrl && typeof idUrl === 'string') {
     const match = idUrl.match(/[?&]i=(\d+)/);
     if (match) return match[1];
-    // Some URLs end with the numeric id: .../1234567890
     const pathMatch = idUrl.match(/\/(\d{8,})$/);
     if (pathMatch) return pathMatch[1];
   }
@@ -77,7 +74,6 @@ async function fetchTopSongsFromApple(limit = 10) {
   console.log('[songService] previewMap keys:', Object.keys(previewMap));
 
   return entries.map((entry) => {
-    // Prefer im:name (song title only); fall back to the combined entry.title label
     const rawName = entry['im:name'];
     const rawTitle = entry.title;
     const title =
@@ -93,7 +89,6 @@ async function fetchTopSongsFromApple(limit = 10) {
       image = images._;
     }
 
-    // im:artist is the primary artist field in Apple RSS
     let author = '';
     const rawArtist = entry['im:artist'];
     if (rawArtist) {

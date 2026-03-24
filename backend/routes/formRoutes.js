@@ -9,7 +9,6 @@ function ensureDataDir() {
 }
 
 function registerFormRoutes(app) {
-  // Keep the existing JSON save behaviour for the form
   app.post('/submit', (req, res) => {
     try {
       ensureDataDir();

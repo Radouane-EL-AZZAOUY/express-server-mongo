@@ -1,6 +1,6 @@
 # Music Top 10
 
-Express app that fetches the iTunes Top 10 songs, stores them in MongoDB, and serves an interactive chart where each song can be previewed for 30 seconds.
+An Express.js application containerized with Docker that fetches the iTunes Top 10 songs, stores them in MongoDB, and serves an interactive chart where each song can be previewed for 30 seconds. MongoDB data is persisted on a Docker volume.
 
 ---
 

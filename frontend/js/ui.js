@@ -29,7 +29,6 @@ function stopActive() {
 }
 
 function playSong(song, li, playBtn, progressFill) {
-  // If this song is already playing, pause it
   if (activeAudio && activeLi === li) {
     stopActive();
     return;
@@ -99,7 +98,6 @@ export function renderTop10(songs) {
       li.title = "Click to play 30s preview";
     }
 
-    // Album art with rank badge
     const imgWrap = document.createElement("div");
     imgWrap.className = "top10-img-wrap";
 
@@ -119,7 +117,6 @@ export function renderTop10(songs) {
 
     li.appendChild(imgWrap);
 
-    // Track info + progress bar
     const textWrapper = document.createElement("div");
     textWrapper.className = "top10-track";
 
@@ -143,20 +140,17 @@ export function renderTop10(songs) {
 
     li.appendChild(textWrapper);
 
-    // Play button (right column)
     const playBtn = document.createElement("button");
     playBtn.className = "btn-play";
     playBtn.setAttribute("aria-label", `Play preview of ${song.title}`);
     playBtn.textContent = "▶";
 
     if (song.previewUrl) {
-      // Click anywhere on the row
       li.addEventListener("click", (e) => {
-        if (e.target === playBtn) return; // handled below
+        if (e.target === playBtn) return;
         playSong(song, li, playBtn, progressFill);
       });
 
-      // Click the button directly
       playBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         playSong(song, li, playBtn, progressFill);
